@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use Mojolicious::Lite;
 
-use CCP::Xero::Agent::PublicApplication;
+use WebService::Xero::Agent::PublicApplication;
 use Data::Dumper;
 
 =pod
@@ -75,7 +75,7 @@ get '/cb' => sub {
     ##
     ## Xero redirects the user back to this app
     ## after authenticating.
-    my $xero = CCP::Xero::Agent::PublicApplication->new( 
+    my $xero = WebService::Xero::Agent::PublicApplication->new( 
                                                       NAME            => $config->{PUBLIC_APPLICATION}{NAME},
                                                       CONSUMER_KEY    => $config->{PUBLIC_APPLICATION}{CONSUMER_KEY}, 
                                                       CONSUMER_SECRET => $config->{PUBLIC_APPLICATION}{CONSUMER_SECRET},
@@ -106,7 +106,7 @@ get '/cb' => sub {
 sub generate_xero_auth_link_with_callback
 {
     my $self  = shift;
-    my $xero = CCP::Xero::Agent::PublicApplication->new( 
+    my $xero = WebService::Xero::Agent::PublicApplication->new( 
                                                       NAME            => $config->{PUBLIC_APPLICATION}{NAME},
                                                       CONSUMER_KEY    => $config->{PUBLIC_APPLICATION}{CONSUMER_KEY}, 
                                                       CONSUMER_SECRET => $config->{PUBLIC_APPLICATION}{CONSUMER_SECRET},
