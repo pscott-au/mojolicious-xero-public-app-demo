@@ -11,6 +11,7 @@ use Data::Dumper;
 =head2 DESCRIPTION
 
   based loosely on Mojolicious Gist at L<https://gist.github.com/throughnothing/3726907>
+  This code is an example of the Cpan module WebService::Xero
 
   Assumes Mojolicious stuff installed - am just starting to look at this myself but looks very cool !
   See L<http://mojolicious.org/perldoc/Mojolicious/Guides/>
@@ -50,7 +51,7 @@ my $pk_text = read_file( $config->{PRIVATE_APPLICATION}{KEYFILE} );
 
 get '/' => sub {
   my $c = shift;
-  $c->render(text => 'Hello World!');
+  $c->render(text => '<a href="/auth/">Xero Auth</a>');
 };
 
 
@@ -81,20 +82,21 @@ get '/cb' => sub {
                                                       CONSUMER_SECRET => $config->{PUBLIC_APPLICATION}{CONSUMER_SECRET},
     );
     my $got_access_token = 'nope';
+    my $user_org_as_text;
     if ( my $token_response = $xero->get_access_token( $self->param('oauth_token'), $self->param('oauth_verifier'), $self->param('org'), $self->session->{'_oauth_token_secret'}, $self->session->{'_oauth_token'} ) )
     {
-        $got_access_token = Dumper ($token_response);
-        $got_access_token = $xero->api_account_organisation()->as_text();
+        $got_access_token = $token_response;
+        $user_org_as_text = $xero->api_account_organisation()->as_text();
 
     }    
     $self->render(template => 'cb',  # one=> $self->every_param('foo')->[0], two => $self->every_param('foo')->[0], 
       oauth_token        => $self->session->{'_oauth_token'},              ## The original access token
       oauth_token_secret => $self->session->{'_oauth_token_secret'},##   details
-
-      access_token =>  $self->param('oauth_token'),
-      oauth_verifier => $self->param('oauth_verifier'),
-      org => $self->param('org'),
+      access_token     =>  $self->param('oauth_token'),
+      oauth_verifier   => $self->param('oauth_verifier'),
+      org              => $self->param('org'),
       got_access_token => $got_access_token,
+      user_org_as_text => $user_org_as_text,
 
 
      );
@@ -133,6 +135,7 @@ Welcome to Xero Public Application Demo Application
 
 @@ cb.html.ep
 
+<!--
 Auth Token   = <%= $oauth_token %> <br/>
 Access Token = <%= $access_token %> <br/>
 
@@ -141,4 +144,6 @@ oauth_token_secret = <%= $oauth_token_secret %> <br/>
 
 oauth_verifier = <%= $oauth_verifier %> <br/>
 org  = <%= $org %> <br/><br/>
-$got_access_token = <%= $got_access_token %> <hr/>
+-->
+AUTH TOKEN OBTAINED = <%= $got_access_token %> <hr/>
+<pre>USER ORG AS TEXT <%= $user_org_as_text %></pre>
