@@ -117,8 +117,9 @@ body{
         <div class="row" style="background-color: white;">
             <!-- https://github.com/blog/273-github-ribbons -->
             <a href="https://github.com/pscott-au/mojolicious-xero-public-app-demo"><img style="position: absolute; top: 20; right: 0; border: 0;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
-            <div class="col-md-3"><img src="xero_logo.png"></div>
-            <div class="col-md-9"><h1>Xero Public Application API Demo</h1></div>
+            <div class="col-md-2"><img src="xero_logo.png"></div>
+            <div class="col-md-7"><h1>Xero Public Application API Demo</h1></div>
+            <div class="col-md-3"><img style="margin-top: 20px;" class="img image image-rounded" height="100" src="https://avatars2.githubusercontent.com/u/23516956?v=3&s=200"></div>
         </div>
         <div class="row" style="background-color:#c0c0c0;">
             <div class="col-md-2"></div>
@@ -140,7 +141,29 @@ body{
         <!--<p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>-->
 <div class="row">
     <div class="col-md-12">
-        
+  
+
+  <!-- Modal -->
+  <!-- <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal">Open Modal</button> -->
+  <div class="modal fade" id="myModal" role="dialog" data-backdrop="static">
+    <div class="modal-dialog">
+    
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <!--<button type="button" class="close" data-dismiss="modal">&times;</button>-->
+          <h4 class="modal-title">No Socket Connection</h4>
+        </div>
+        <div class="modal-body">
+          <p>It is likely that your WebSocket has timed out due to inactivity - reload the page to try again.</p>
+        </div>
+        <div class="modal-footer">
+          <!--<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>-->
+        </div>
+      </div>
+      
+    </div>
+  </div>      
         <!-- <button onclick="WebSocketTest()">Connect Websock</button> -->
     </div>
 </div>
@@ -303,7 +326,8 @@ var ws;
            };
            ws.onclose = function() // websocket is closed.
            { 
-              alert("Connection is closed..."); // TODO: hide all main page and display a reload/refresh button
+              //alert("Connection is closed..."); // TODO: hide all main page and display a reload/refresh button
+              $("#myModal").modal("show"); 
            };
         }
         else

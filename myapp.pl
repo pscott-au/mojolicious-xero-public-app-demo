@@ -103,6 +103,7 @@ get '/cb' => sub {
     );
     my $got_access_token = 'nope';
     my $user_org_as_text;
+    my $org_name = '';
     update_xero_session( $self, 'REQUESTING ACCESS TOKEN');
     if ( my $token_response = $xero->get_access_token( $self->param('oauth_token'), $self->param('oauth_verifier'), $self->param('org'), $self->session->{'_oauth_token_secret'}, $self->session->{'_oauth_token'} ) )
     {
@@ -110,7 +111,9 @@ get '/cb' => sub {
         update_xero_session( $self, 'GOT ACCESS TOKEN' );
 
         update_xero_session( $self, 'REQUESTING ORGANISATION DATA');
-        $user_org_as_text = $xero->api_account_organisation()->as_text();
+        my $org = $xero->api_account_organisation();
+        $user_org_as_text = $org->as_text();
+        $org_name = $org->{LegalName};
         update_xero_session( $self, 'GOT ORGANISATION DATA');
 
     }    
@@ -122,6 +125,7 @@ get '/cb' => sub {
       org              => $self->param('org'),
       got_access_token => $got_access_token,
       user_org_as_text => $user_org_as_text,
+      user_org_name => $org_name,
 
 
      );
@@ -208,7 +212,9 @@ __DATA__
 
 
 @@ cb.html.ep
-
+<html>
+<headh></head>
+<body>
 <!--
 Auth Token   = <%= $oauth_token %> <br/>
 Access Token = <%= $access_token %> <br/>
@@ -221,10 +227,57 @@ org  = <%= $org %> <br/><br/>
 -->
 AUTH TOKEN OBTAINED = <%= $got_access_token %> <hr/>
 <pre>USER ORG AS TEXT <%= $user_org_as_text %></pre>
-
+</body>
+<script>
+  window.opener.document.body.style.backgroundColor = "red";
+  window.opener.complete_callback('<%= $user_org_name %>');
+  window.close();
+</script>
+</html>
 
 
 
 @@ xero_login.html.ep
-Welcome to Xero Public Application Demo Application
-<a href="#" onClick="window.open('/auth','pagename','resizable,height=260,width=370'); return false;">New Page</a><noscript>You need Javascript to use the previous link or use <a href="/auth" target="_blank">New Page</a></noscript>
+<html><head><title>Demo Integrated Application</title></head>
+<body>
+<div class="container" id="connect">
+Sample Application Embedded in an iFrame Window
+<a href="#" onClick="window.open('/auth','pagename','resizable,height=260,width=370'); return false;"><img src="connect_xero_button_blue.png"></a><noscript>You need Javascript to use the previous link or use <a href="/auth" target="_blank">New Page</a></noscript>
+</div>
+<hr/>
+<div class="container" id="connected">
+  <div class="row">
+        <div class="col-md-12"><div class="content lead" id="orgname"></div></div>
+  </div<
+  <div class="row">
+  <div class="col-md-5">
+        <div class="btn-group">
+          <button type="button" class="btn ">Contacts</button>
+          <button type="button" class="btn btn-warning">Organisation</button>
+          <button type="button" class="btn btn-success">Invoices</button>
+        </div>
+  </div>
+  </div>
+</div>
+
+    <script src="https://code.jquery.com/jquery-3.1.0.slim.min.js"></script>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<script>
+
+  function complete_callback(orgname)
+  {
+    $('#orgname').text(orgname);
+    document.body.style.backgroundColor = "blue";
+    $('#connect').hide();
+    $('#connected').show();
+  }
+
+  $(function() {
+    $('#connected').hide();
+  });
+
+</script>
+</body>
+</html>
