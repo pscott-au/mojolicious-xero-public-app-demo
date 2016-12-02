@@ -3,7 +3,7 @@ use Mojolicious::Lite;
 
 use WebService::Xero::Agent::PublicApplication;
 use Data::Dumper;
-
+use JSON;
 =pod
 
 =head1 myall.pl 
@@ -47,26 +47,44 @@ my $pk_text = read_file( $config->{PRIVATE_APPLICATION}{KEYFILE} );
 #};
 
 
+my $xero_sessions = {};
+my $xero_session_id = 0;
 
+my $app = app;
+
+$app->sessions->cookie_name('xero_testing');
+
+my $static = $app->static;
+push @{$static->paths}, ($ENV{PWD});
 
 get '/' => sub {
-  my $c = shift;
-  $c->render(text => '<a href="/auth/">Xero Auth</a>');
+  my $self = shift;
+  $self->session->{'xero_session_id'} = $xero_session_id++;
+  $xero_sessions->{ $self->session->{'xero_session_id'} } = { 'id' => $self->session->{'xero_session_id'}, status => 'NEW' };
+  
+  $self->render(template => 'xero_login');
+
+  #$self->render(text => '<a href="/auth/" target="_XERO_LOGIN">Start This Xero Session</a>This is Xero Session #' . $self->session->{'xero_session_id'} );
 };
 
 
 get '/xero' => sub {
-  my $c = shift;
-  $c->render(template => 'xero_login');
+  my $self = shift;
+  $self->render(template => 'xero_login');
 };
 
 
 get '/auth' => sub {
     ## TODO: Check if have existing token
     my ( $self ) = @_;
-
+    #warn($self->session->{'xero_session_id'} );
+    update_xero_session( $self, 'GENERATING LINK');
+    #$xero_sessions->{ $self->session->{'xero_session_id'}  } = { 'id' => $self->session->{'xero_session_id'}, status=> 'GENERATING LINK' };
     if (my $url = generate_xero_auth_link_with_callback( $self ) )
     {
+      
+      update_xero_session( $self, 'REDIRECTING TO Xero to Authorise');
+      $xero_sessions->{ $self->session->{'xero_session_id'}  }{'xero_usl'} = $url;
       shift->redirect_to( $url );    
     }    
 };
@@ -76,6 +94,8 @@ get '/cb' => sub {
     ##
     ## Xero redirects the user back to this app
     ## after authenticating.
+    #warn($self->session->{'xero_session_id'} );
+    update_xero_session( $self, 'HANDLING callback from Xero' );
     my $xero = WebService::Xero::Agent::PublicApplication->new( 
                                                       NAME            => $config->{PUBLIC_APPLICATION}{NAME},
                                                       CONSUMER_KEY    => $config->{PUBLIC_APPLICATION}{CONSUMER_KEY}, 
@@ -83,10 +103,15 @@ get '/cb' => sub {
     );
     my $got_access_token = 'nope';
     my $user_org_as_text;
+    update_xero_session( $self, 'REQUESTING ACCESS TOKEN');
     if ( my $token_response = $xero->get_access_token( $self->param('oauth_token'), $self->param('oauth_verifier'), $self->param('org'), $self->session->{'_oauth_token_secret'}, $self->session->{'_oauth_token'} ) )
     {
         $got_access_token = $token_response;
+        update_xero_session( $self, 'GOT ACCESS TOKEN' );
+
+        update_xero_session( $self, 'REQUESTING ORGANISATION DATA');
         $user_org_as_text = $xero->api_account_organisation()->as_text();
+        update_xero_session( $self, 'GOT ORGANISATION DATA');
 
     }    
     $self->render(template => 'cb',  # one=> $self->every_param('foo')->[0], two => $self->every_param('foo')->[0], 
@@ -123,6 +148,57 @@ sub generate_xero_auth_link_with_callback
     return $xero->{login_url};
 }
 
+
+### SOCKET STUFF
+websocket '/data' => sub {
+  my $self = shift;
+  $xero_sessions->{ $self->session->{'xero_session_id'} }{ socket_client } = $self;
+
+  my $loop = Mojo::IOLoop->singleton;
+  $loop->stream($self->tx->connection)->timeout(1000);
+  update_xero_session($self, 'WAITING FOR USER TO INITIATE AUTH');
+  #my $timer = Mojo::IOLoop->recurring( 1 => sub {
+  #  state $i = 0;
+  #  #$self->send({ json => gen_data($i++,$self) });
+  #  $self->send({ json => $xero_sessions->{ $self->session->{'xero_session_id'} } });
+
+  #});
+
+  $self->on( finish => sub {
+    #Mojo::IOLoop->remove($timer);
+    $xero_sessions->{ $self->session->{'xero_session_id'} }{ socket_client } = undef;
+  });
+};
+
+sub gen_data {
+  my $x = shift;
+  my $self = shift;
+  return [ $x, $self->session->{'xero_session_id'} , $self->session->{'_oauth_token'} ]; ##sin( $x + 2*rand() - 2*rand() )
+}
+
+sub update_xero_session
+{
+    my ( $self, $status ) = @_;
+    $xero_sessions->{ $self->session->{'xero_session_id'} }{ status } = $status;
+    if ( $xero_sessions->{ $self->session->{'xero_session_id'} }{ socket_client } )
+    {
+        $xero_sessions->{ $self->session->{'xero_session_id'} }{ socket_client }->send({json=> { status=>$status } });
+
+    }
+    else
+    {
+        warn('no session socket to update ');
+    }
+
+}
+
+
+
+
+
+
+
+
 app->secrets(['sdfjkhjksJHKddf JHJDF']);
 
 app->start;
@@ -130,8 +206,6 @@ app->start;
 __DATA__
 
 
-@@ xero_login.html.ep
-Welcome to Xero Public Application Demo Application
 
 @@ cb.html.ep
 
@@ -147,3 +221,10 @@ org  = <%= $org %> <br/><br/>
 -->
 AUTH TOKEN OBTAINED = <%= $got_access_token %> <hr/>
 <pre>USER ORG AS TEXT <%= $user_org_as_text %></pre>
+
+
+
+
+@@ xero_login.html.ep
+Welcome to Xero Public Application Demo Application
+<a href="#" onClick="window.open('/auth','pagename','resizable,height=260,width=370'); return false;">New Page</a><noscript>You need Javascript to use the previous link or use <a href="/auth" target="_blank">New Page</a></noscript>
