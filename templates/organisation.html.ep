@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Xero Diagnostic</title>
+    <script src="https://code.jquery.com/jquery-3.1.0.slim.min.js"></script>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<link href='http://fonts.googleapis.com/css?family=Baloo|Bhaina|Roboto' rel='stylesheet' type='text/css'>
+
+
+<link rel="stylesheet" href="railscasts.min.css">
+<script src="highlight.min.js"></script>
+
+<style>
+
+
+.info-div {
+  position: relative;
+  width: 500px;
+  
+  z-index: 10;
+  height: 100%;
+  max-height: 150px;
+  overflow-y: scroll;
+}
+
+body{
+    margin-top:10px;
+    background: #e0e0e0;
+}
+
+.update-nag{
+  display: inline-block;
+  font-size: 14px;
+  text-align: left;
+  background-color: #fff;
+  height: 40px;
+  -webkit-box-shadow: 0 1px 1px 0 rgba(0,0,0,.2);
+  box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);
+  margin-bottom: 10px;
+}
+
+.update-nag:hover{
+    cursor: pointer;
+    -webkit-box-shadow: 0 1px 1px 0 rgba(0,0,0,.4);
+  box-shadow: 0 1px 1px 0 rgba(0,0,0,.3);
+}
+
+.update-nag > .update-split{
+  background: #337ab7;
+  width: 33px;
+  float: left;
+  color: #fff!important;
+  height: 100%;
+  text-align: center;
+}
+
+.update-nag > .update-split > .glyphicon{
+  position:relative;
+  top: calc(50% - 9px)!important; /* 50% - 3/4 of icon height */
+}
+.update-nag > .update-split.update-success{
+  background: #5cb85c!important;
+}
+
+.update-nag > .update-split.update-danger{
+  background: #d9534f!important;
+}
+
+.update-nag > .update-split.update-info{
+  background: #5bc0de!important;
+}
+
+
+
+.update-nag > .update-text{
+  line-height: 19px;
+  padding-top: 11px;
+  padding-left: 45px;
+  padding-right: 20px;
+}
+</style>
+
+  </head>
+
+<body>
+
+
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Powered by Perl WebService::Xero</a>
+        </div>
+<!--        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+-->
+        <!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container" style="margin-top: 40px;">
+
+
+      <div class="starter-template">
+        <div class="row" style="background-color: white;">
+            <!-- https://github.com/blog/273-github-ribbons -->
+            <a href="https://github.com/pscott-au/mojolicious-xero-public-app-demo"><img style="position: absolute; top: 20; right: 0; border: 0;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+            <div class="col-md-2"><img src="xero_logo.png"></div>
+            <div class="col-md-7"><h1>Xero Public Application API Demo</h1></div>
+            <div class="col-md-3"><img style="margin-top: 20px;" class="img image image-rounded" height="100" src="https://avatars2.githubusercontent.com/u/23516956?v=3&s=200"></div>
+        </div>
+        <div class="row" style="background-color:#c0c0c0;">
+            <div class="col-md-2"></div>
+            <div class="col-md-10"><h3></h3>
+                <p class="lead"> ORGANISATION <span id="status_span"><%= $orgname %></span></p>
+            </div>
+        </div>
+
+
+
+
+
+
+
+
+
+<div class="container">
+  <form>
+    <div class="form-group row">
+      <label for="display_name" class="col-sm-2 col-form-label">Display Name</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="display_name" placeholder="Display Name" disabled>
+      </div>
+    </div>
+    <div class="form-group row">
+      <label for="legal_name" class="col-sm-2 col-form-label">Legal / Trading Name</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="legal_name" placeholder="Legal Name" disabled>
+      </div>
+    </div>
+    <div class="form-group row">
+      <label for="lob" class="col-sm-2 col-form-label">Line of Business</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="lob" placeholder="Line of Business" disabled>
+      </div>
+    </div>
+    <div class="form-group row">
+      <label for="org_type" class="col-sm-2 col-form-label">Organisation Type</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="org_type" placeholder="Organisation Type" disabled>
+      </div>
+    </div>
+    <div class="form-group row">
+      <label for="abn" class="col-sm-2 col-form-label">Australian Business Number</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="abn" placeholder="ABN" disabled>
+      </div>
+    </div>
+    <div class="form-group row">
+      <label for="branch" class="col-sm-2 col-form-label">Branch (if applicable)</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="branch" placeholder="" disabled>
+      </div>
+    </div>
+    <div class="form-group row">
+      <label for="org_desc" class="col-sm-2 col-form-label">Organisation Description</label>
+      <div class="col-sm-10">
+        <textarea class="form-control" id="org_desc" disabled></textarea>
+      </div>
+    </div>
+  </form>
+</div>
+
+
+
+
+
+
+
+
+
+
+<div class="row">
+    <div class="col-md-12">
+  
+
+  <!-- Modal -->
+  <!-- <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal">Open Modal</button> -->
+  <div class="modal fade" id="myModal" role="dialog" data-backdrop="static">
+    <div class="modal-dialog">
+    
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <!--<button type="button" class="close" data-dismiss="modal">&times;</button>-->
+          <h4 class="modal-title">No Socket Connection</h4>
+        </div>
+        <div class="modal-body">
+          <p>It is likely that your WebSocket has timed out due to inactivity - reload the page to try again.</p>
+        </div>
+        <div class="modal-footer">
+          <!--<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>-->
+        </div>
+      </div>
+      
+    </div>
+  </div>      
+        <!-- <button onclick="WebSocketTest()">Connect Websock</button> -->
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12" style="min-height: 150px;">
+
+    </div>
+</div>
+
+<!-- 
+# Hardware architecture: x86_64
+# Timestamp: 2016-06-16 06:23 (GMT+1)
+# 
+8:40:00 - (A) doing it "Hello worl" -- Xero 0-2-3 ## $x = WebService::Xero::Agent::PublicApplication->new()
+8:40:00 -                           -- Xero 0-2-3 ## test
+8:40:00 -                           -- Xero 0-2-3 ## test
+8:40:00 - (B) doing it "Hello worl" -- Xero 0-2-3 ## test
+TAP version 13
+1..19
+GET AUTH TOKEN
+ok 1.1 - 8:40:00am - SEND TOKEN TO Xero
+ok 2 - zdtm/static/maps03 # SKIP manual run only
+ok 3 - zdtm/static/mlock_setuid
+ok 4 - zdtm/static/groups
+ok 5 - zdtm/static/maps05
+ok 6 - zdtm/static/pdeath_sig
+ok 7 - zdtm/static/xids00
+ok 8 - zdtm/static/proc-self
+notok 9 - ERROR
+-->
+<!--
+  
+    NB: Xero does not allow for the embedding of the login auth screen in an iFrame and os we require a new window to perform the auth steps.
+      - I assume it detects if (window!=window.top) { /* I'm in a frame! */ }
+
+-->
+
+
+      </div>
+
+
+        
+    </div>
+</div>
+</div>
+
+
+
+
+    </div><!-- /.container -->
+
+
+
+
+
+<script>
+
+var ws;
+
+    function redraw_screen()
+    {
+      $('pre code').each(function(i, block) {
+        hljs.highlightBlock(block);
+      });
+    }
+
+
+    function CreateWebSocket()
+    {
+        if ("WebSocket" in window)
+        {
+           console.log("WebSocket is supported by your Browser!");
+           
+           // Let us open a web socket
+           ws = new WebSocket("ws://localhost:3000/data");
+            
+           ws.onopen = function()
+           {
+              // Web Socket is connected, send data using send()
+              //ws.send("Message to send");
+              //alert("Message is sent...");
+              console.log('connected');
+           };
+            
+           ws.onmessage = function (evt) 
+           { 
+              var received_msg = evt.data;
+              //alert("Message is received...");
+               console.log(received_msg);
+               console.log(document.cookie);
+              var obj = JSON.parse( received_msg );
+              $('#status_span').html( obj.status );
+                d = new Date();
+                //d.toLocaleString();       // -> "2/1/2013 7:37:08 AM"
+                //d.toLocaleDateString();   // -> "2/1/2013"
+                  // -> "7:38:05 AM"
+              //$('#log').append( d.toLocaleTimeString() + ' - (A) doing it "Hello worl" -- Xero 0-2-3 ## ' + obj.status + "\n");
+              $('#log').append( d.toLocaleTimeString() + ' - State Changed  ## ' + obj.status + "\n");
+              redraw_screen();
+              //line1.append(new Date().getTime(), obj.v1 / 100 ); 
+
+              //line2.append(new Date().getTime(), 100-received_msg);
+           };
+           ws.onclose = function() // websocket is closed.
+           { 
+              //alert("Connection is closed..."); // TODO: hide all main page and display a reload/refresh button
+              $("#myModal").modal("show"); 
+           };
+        }
+        else
+        {
+           // The browser doesn't support WebSocket
+           alert("WebSocket NOT supported by your Browser!");
+        }
+    }
+
+
+  /* --------------- JQUERY MAIN ---- */
+  $(function() {
+   // CreateWebSocket();
+    
+  });
+</script>
+
+</body>
+</html>

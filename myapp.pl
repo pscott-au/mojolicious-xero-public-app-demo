@@ -104,6 +104,7 @@ get '/cb' => sub {
     my $got_access_token = 'nope';
     my $user_org_as_text;
     my $org_name = '';
+    my $dumper = '';
     update_xero_session( $self, 'REQUESTING ACCESS TOKEN');
     if ( my $token_response = $xero->get_access_token( $self->param('oauth_token'), $self->param('oauth_verifier'), $self->param('org'), $self->session->{'_oauth_token_secret'}, $self->session->{'_oauth_token'} ) )
     {
@@ -115,6 +116,7 @@ get '/cb' => sub {
         $user_org_as_text = $org->as_text();
         $org_name = $org->{LegalName};
         update_xero_session( $self, 'GOT ORGANISATION DATA');
+        $dumper = Dumper $org;
 
     }    
     $self->render(template => 'cb',  # one=> $self->every_param('foo')->[0], two => $self->every_param('foo')->[0], 
@@ -125,10 +127,18 @@ get '/cb' => sub {
       org              => $self->param('org'),
       got_access_token => $got_access_token,
       user_org_as_text => $user_org_as_text,
-      user_org_name => $org_name,
+      user_org_name    => $org_name,
+      dumper           => $dumper,
 
 
      );
+
+};
+
+get '/Organisation' => sub {
+  my ( $self ) = @_;
+  $self->render(template => 'organisation',
+                orgname => 'PETER');
 
 };
  
@@ -215,7 +225,7 @@ __DATA__
 <html>
 <headh></head>
 <body>
-<!--
+
 Auth Token   = <%= $oauth_token %> <br/>
 Access Token = <%= $access_token %> <br/>
 
@@ -224,14 +234,21 @@ oauth_token_secret = <%= $oauth_token_secret %> <br/>
 
 oauth_verifier = <%= $oauth_verifier %> <br/>
 org  = <%= $org %> <br/><br/>
--->
+
 AUTH TOKEN OBTAINED = <%= $got_access_token %> <hr/>
 <pre>USER ORG AS TEXT <%= $user_org_as_text %></pre>
+<%= $user_org_name %>
+
+<%= $dumper %>
+
 </body>
 <script>
   window.opener.document.body.style.backgroundColor = "red";
-  window.opener.complete_callback('<%= $user_org_name %>');
-  window.close();
+  window.opener.complete_callback("<%= $user_org_name %>");
+  setTimeout(function(){
+    //window.close();
+   }, 2000);
+  
 </script>
 </html>
 
@@ -247,7 +264,7 @@ Sample Application Embedded in an iFrame Window
 <hr/>
 <div class="container" id="connected">
   <div class="row">
-        <div class="col-md-12"><div class="content lead" id="orgname"></div></div>
+        <div class="col-md-12 panel"><div class="content lead" id="orgname"> Unknown </div></div>
   </div<
   <div class="row">
   <div class="col-md-5">

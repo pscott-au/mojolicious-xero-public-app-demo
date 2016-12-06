@@ -10,7 +10,7 @@ This example of a [Xero Public API Application](https://developer.xero.com/docum
 ### Requirements
 
   - A Xero account configured with 'Public Application' API credentials as described in the ['My Apps' Tab in the Xero Developer Portal](https://app.xero.com/Application)
-  - A development environment with Perl (Linux,Windows or Mac) including an installation of the CPAN [WebService::Xero](http://search.cpan.org/~localshop/WebService-Xero/) module and the [MojoLicious](http://search.cpan.org/~sri/Mojolicious/) Real Time Web Framework
+  - A development environment with Perl (Linux,Windows or Mac) including an installation of the CPAN [WebService::Xero](http://search.cpan.org/~localshop/WebService-Xero/) module (Version 1.2+)  and the [MojoLicious](http://search.cpan.org/~sri/Mojolicious/) Real Time Web Framework
 
 ### Configuration
 
