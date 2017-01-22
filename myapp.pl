@@ -35,7 +35,7 @@ use JSON;
 use File::Slurp;
 use Config::Tiny;
 my $config =  Config::Tiny->read( 'test_config.ini' );
-my $pk_text = read_file( $config->{PRIVATE_APPLICATION}{KEYFILE} );
+my $pk_text = read_file( $config->{PRIVATE_APPLICATION}{KEYFILE} ) if ( defined $config->{PRIVATE_APPLICATION}{KEYFILE} and -e "$config->{PRIVATE_APPLICATION}{KEYFILE}");
 
 ## alt - manually hard code examples - NB you would NOT expose these as ENV in production
 #my $config = {
