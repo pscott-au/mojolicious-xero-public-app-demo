@@ -6,7 +6,7 @@ use Data::Dumper;
 use JSON;
 =pod
 
-=head1 myall.pl 
+=head1 TITLE myapp.pl 
 
 =head2 DESCRIPTION
 
@@ -19,6 +19,7 @@ use JSON;
 =head2 USAGE
 
     morbo ./myapp.pl
+
     Open browser to http://localhost:3000/auth
       should then be redirected to Xero to confirm access and redirected to http://localhost:3000/
       where if validated the app will pull the Users Xero Organisation details and
@@ -32,8 +33,8 @@ use JSON;
 ##      and will need the consumer key and secret to configure this application to talk to that access point.
 
 ## for a similar approach to the CCP::Xero test module to load the credentials
-use File::Slurp;
-use Config::Tiny;
+use File::Slurp;  ## used to load the keyfile
+use Config::Tiny; ## global install specific configuration parameters
 my $config =  Config::Tiny->read( 'test_config.ini' );
 my $pk_text = read_file( $config->{PRIVATE_APPLICATION}{KEYFILE} ) if ( defined $config->{PRIVATE_APPLICATION}{KEYFILE} and -e "$config->{PRIVATE_APPLICATION}{KEYFILE}");
 
@@ -57,24 +58,33 @@ $app->sessions->cookie_name('xero_testing');
 my $static = $app->static;
 push @{$static->paths}, ($ENV{PWD});
 
-get '/' => sub {
+
+
+get "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/" => sub {
   my $self = shift;
   $self->session->{'xero_session_id'} = $xero_session_id++;
   $xero_sessions->{ $self->session->{'xero_session_id'} } = { 'id' => $self->session->{'xero_session_id'}, status => 'NEW' };
   
-  $self->render(template => 'xero_login');
+  $self->render(template => 'xero_login',
+                base_url => "$config->{MOJO_APP_PARAMS}{APPLICATION_URL_BASE}", ## template adds /auth to this as target for popup and uses this as base url for images
+                app_dir => $config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY},
+                );
 
   #$self->render(text => '<a href="/auth/" target="_XERO_LOGIN">Start This Xero Session</a>This is Xero Session #' . $self->session->{'xero_session_id'} );
 };
 
 
-get '/xero' => sub {
+get "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/xero" => sub {
   my $self = shift;
-  $self->render(template => 'xero_login');
+  $self->render(template => 'xero_login',
+                base_url => "$config->{MOJO_APP_PARAMS}{APPLICATION_URL_BASE}", ## template adds /auth to this as target for popup and uses this as base url for images
+                app_dir => $config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY},
+
+                );
 };
 
 
-get '/auth' => sub {
+get "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/auth" => sub {
     ## TODO: Check if have existing token
     my ( $self ) = @_;
     #warn($self->session->{'xero_session_id'} );
@@ -89,7 +99,7 @@ get '/auth' => sub {
     }    
 };
 
-get '/cb' => sub {
+get "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/cb" => sub {
     my ( $self ) = @_;
     ##
     ## Xero redirects the user back to this app
@@ -106,7 +116,10 @@ get '/cb' => sub {
     my $org_name = '';
     my $dumper = '';
     update_xero_session( $self, 'REQUESTING ACCESS TOKEN');
-    if ( my $token_response = $xero->get_access_token( $self->param('oauth_token'), $self->param('oauth_verifier'), $self->param('org'), $self->session->{'_oauth_token_secret'}, $self->session->{'_oauth_token'} ) )
+
+    if ( my $token_response = $xero->get_access_token( $self->param('oauth_token'), $self->param('oauth_verifier'), 
+                                                       $self->param('org'), $self->session->{'_oauth_token_secret'}, 
+                                                       $self->session->{'_oauth_token'} ) )
     {
         $got_access_token = $token_response;
         update_xero_session( $self, 'GOT ACCESS TOKEN' );
@@ -129,19 +142,26 @@ get '/cb' => sub {
       user_org_as_text => $user_org_as_text,
       user_org_name    => $org_name,
       dumper           => $dumper,
+      base_url         => $config->{MOJO_APP_PARAMS}{APPLICATION_URL_BASE},
 
 
      );
 
 };
 
-get '/Organisation' => sub {
+get "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/Organisation" => sub {
   my ( $self ) = @_;
   $self->render(template => 'organisation',
                 orgname => 'PETER');
 
 };
  
+get "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/main" => sub {
+  my ( $self ) = @_;
+  $self->render(template => 'main',
+                WEBSOCKET_URL => $config->{MOJO_APP_PARAMS}{WEBSOCKET_URL});
+
+};
 
 
 sub generate_xero_auth_link_with_callback
@@ -152,7 +172,9 @@ sub generate_xero_auth_link_with_callback
                                                       CONSUMER_KEY    => $config->{PUBLIC_APPLICATION}{CONSUMER_KEY}, 
                                                       CONSUMER_SECRET => $config->{PUBLIC_APPLICATION}{CONSUMER_SECRET},
     );
-    $xero->get_request_token( 'http://localhost:3000/cb/' );
+    $xero->get_request_token(  "$config->{MOJO_APP_PARAMS}{APPLICATION_URL_BASE}/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/cb" );
+    #$xero->get_request_token(  "http://localhost:3000/app/cb" );
+
     ## Save token detail into client session cookie ( this is bad practice - should persist in local storage ) 
     ## - passing this back to client passes security responsibility back to the client with server secrets - don't do this in production env 
     ## $xero->{'oauth_token'} $xero->{'oauth_token_secret'}
@@ -164,7 +186,7 @@ sub generate_xero_auth_link_with_callback
 
 
 ### SOCKET STUFF
-websocket '/data' => sub {
+websocket "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/data" => sub {
   my $self = shift;
   $xero_sessions->{ $self->session->{'xero_session_id'} }{ socket_client } = $self;
 
@@ -190,6 +212,14 @@ sub gen_data {
   return [ $x, $self->session->{'xero_session_id'} , $self->session->{'_oauth_token'} ]; ##sin( $x + 2*rand() - 2*rand() )
 }
 
+
+=pod 
+
+=  update_xero_session( $status ) 
+
+Sends $status as json to socket clients ( the user application window ) 
+
+=cut 
 sub update_xero_session
 {
     my ( $self, $status ) = @_;
@@ -244,7 +274,8 @@ __DATA__
 <html>
 <headh></head>
 <body>
-
+<img src="<%= $base_url %>/pie.gif">
+<!--
 Auth Token   = <%= $oauth_token %> <br/>
 Access Token = <%= $access_token %> <br/>
 
@@ -259,14 +290,14 @@ AUTH TOKEN OBTAINED = <%= $got_access_token %> <hr/>
 <%= $user_org_name %>
 
 <%= $dumper %>
-
+-->
 </body>
 <script>
   window.opener.document.body.style.backgroundColor = "red";
   window.opener.complete_callback("<%= $user_org_name %>");
   setTimeout(function(){
-    // window.close();
-   }, 2000);
+     window.close(); // comment this line out to prevent the auth popup from closing if need to diagnose
+   }, 1500);
   
 </script>
 </html>
@@ -278,7 +309,7 @@ AUTH TOKEN OBTAINED = <%= $got_access_token %> <hr/>
 <body>
 <div class="container" id="connect">
 Sample Application Embedded in an iFrame Window
-<a href="#" onClick="window.open('/auth','pagename','resizable,height=260,width=370'); return false;"><img src="connect_xero_button_blue.png"></a><noscript>You need Javascript to use the previous link or use <a href="/auth" target="_blank">New Page</a></noscript>
+<a href="#" onClick="window.open('<%= $base_url %>/<%= $app_dir %>/auth','pagename','resizable,height=260,width=370'); return false;"><img src="<%= $base_url %>/connect_xero_button_blue.png"></a><noscript>You need Javascript to use the previous link or use <a href="/app/auth" target="_blank">New Page</a></noscript>
 </div>
 <hr/>
 <div class="container" id="connected">

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Xero Diagnostic</title>
+    <title>Xero Public Application</title>
     <script src="https://code.jquery.com/jquery-3.1.0.slim.min.js"></script>
 <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
@@ -12,8 +12,6 @@
 <script src="highlight.min.js"></script>
 
 <style>
-
-
 .info-div {
   position: relative;
   width: 500px;
@@ -129,7 +127,7 @@ body{
         </div>
         <div class="row">
             <div class="col-md-6">
-                        <iframe id="myframe" src="/" style="min-width: 500px; max-height: 150px;"></iframe>
+                        <iframe id="myframe" src="/app" style="min-width: 500px; max-height: 150px;"></iframe>
             </div>
             <div class="col-md-6">
                 <div class="info-div">
@@ -295,7 +293,7 @@ var ws;
            console.log("WebSocket is supported by your Browser!");
            
            // Let us open a web socket
-           ws = new WebSocket("ws://localhost:3000/data");
+           ws = new WebSocket("ws://localhost:3000/app/data");
             
            ws.onopen = function()
            {

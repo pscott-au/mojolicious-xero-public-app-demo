@@ -26,9 +26,9 @@ This example is aimed at those providing solutions to Accounting Service Provide
 
     morbo ./myapp.pl
     
-Open browser to [http://localhost:3000/main.html](http://localhost:3000/main.html) to see the app wrapped in a debug container.
+Open browser to [http://localhost:3000/app/main](http://localhost:3000/app/main) to see the app wrapped in a debug container.
   OR
-Open browser to http://localhost:3000/ to just see the app running without diagnostics etc.
+Open browser to http://localhost:3000/app/ to just see the app running without diagnostics etc.
 
 When you click on the 'Authorise Xero' button you should then be redirected to Xero to confirm access and redirected to an authenticated application interface.
 
@@ -39,17 +39,22 @@ A quick way to create an rc.d script to run the mojo app as a system service is 
 
     curl https://raw.githubusercontent.com/x13machine/ubuntu-demon-creator/master/create-demon.sh | sudo name="mojo-xero" username="peter" command="morbo /usr/local/src/mojolicious-xero-public-app-demo/myapp.pl" bash
 
+
+## CURRENT STATUS
+
+I am currently expanding this in sync with the latest development version 1.2 of [WebService::Xero](https://github.com/pscott-au/CCP-Xero). The development version is being
+refactored to include classes that describe Xero components and encapsulate the data in more detail than a simple struct or json object.
+
 ## TO DO
 
-NB: AS AT 3rd May - I have seen this application failing with not moving beyond '## REQUESTING ACCESS TOKEN' state - issue under investigation.
+* Currently once you have a valid session the Company details are retrieved and used to construct the welcome screen with the name of the user's company and a few buttons to access Xero API endpoints. **These buttons don't do anything at the moment.** 
+* I am in the process of adding this functionality to retreive and provide nicely formatted data.
+* Need to find a way to properly communicate how all of the components of this system interact - am considering use of https://p5js.org/ to create an animated model.
 
-Currently once you have a valid session the Company details are retrieved and used to construct the welcome screen with the name of the user's company and a few buttons to access Xero API endpoints. **These buttons don't do anything at the moment.** 
-I am in the process of adding this functionality to retreive and provide nicely formatted data.
 
 ## NOTES
 
 This application includes a socket service that is used to provide diagnostic feedback to the main.html wrapper interface. This allows you to see the step-by-step protocol dialog as the Perl module negotiates the authenticated session with Xero. This socket layer is not required for you own applications and in the future I will provide some minimal starter applications that don't have this cruft.
 
 The use of websockets introduces some new issues that I will discuss in the future with regard to SSL etc. Ideally we will provide a fully worked example with a container microservice and various configuration options to proxy through requests to this etc.
-
 

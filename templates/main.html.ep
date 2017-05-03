@@ -9,7 +9,7 @@
 
 
 <link rel="stylesheet" href="/railscasts.min.css">
-<script src="/ahighlight.min.js"></script>
+<script src="/highlight.min.js"></script>
 
 <style>
 
@@ -118,106 +118,27 @@ body{
             <!-- https://github.com/blog/273-github-ribbons -->
             <a href="https://github.com/pscott-au/mojolicious-xero-public-app-demo"><img style="position: absolute; top: 20; right: 0; border: 0;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
             <div class="col-md-2"><img src="/xero_logo.png"></div>
-            <div class="col-md-7"><h1>Xero Public Application API Demo (Work in Progress)</h1></div>
+            <div class="col-md-7"><h1>Xero Public Application API Demo</h1></div>
             <div class="col-md-3"><img style="margin-top: 20px;" class="img image image-rounded" height="100" src="https://avatars2.githubusercontent.com/u/23516956?v=3&s=200"></div>
         </div>
         <div class="row" style="background-color:#c0c0c0;">
             <div class="col-md-2"></div>
             <div class="col-md-10"><h3></h3>
-                <p class="lead"> ORGANISATION <span id="status_span"><%= $orgname %></span></p>
+                <p class="lead">Status: <span id="status_span">WAITING FOR SOCKET CONNECTION</span>.</p>
             </div>
         </div>
-
-
-
-
-<!--
-
-USER ORG AS TEXT Organisation:
-APIKey : GAMLHSIGOJCE4SCSSKEHFAPQJIJFZS
-Name : Combined Computer Professionals Pty Ltd
-LegalName : Combined Computer Professionals Pty Ltd
-PaysTax : 1
-Version : AU
-BaseCurrency : AUD
-CountryCode : AU
-IsDemoCompany : 0
-OrganisationStatus : ACTIVE
-RegistrationNumber : 95093455120
-TaxNumber : 
-FinancialYearEndDay : 30
-FinancialYearEndMonth : 6
-SalesTaxBasis : CASH
-SalesTaxPeriod : QUARTERLY1
-DefaultSalesTax : Tax Inclusive
-DefaultPurchasesTax : Tax Inclusive
-PeriodLockDate : 
-EndOfYearLockDate : 
-CreatedDateUTC : /Date(1435803651000)/
-OrganisationEntityType : COMPANY
-OrganisationType : COMPANY
-Timezone : EAUSTRALIASTANDARDTIME
-ShortCode : !84jzb
-LineOfBusiness : IT Consulting & Services
-
--->
-
-<div class="container">
-  <form>
-    <div class="form-group row">
-      <label for="display_name" class="col-sm-2 col-form-label">Display Name</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control" id="display_name" placeholder="Display Name" disabled>
-      </div>
-    </div>
-    <div class="form-group row">
-      <label for="legal_name" class="col-sm-2 col-form-label">Legal / Trading Name</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control" id="legal_name" placeholder="Legal Name" disabled>
-      </div>
-    </div>
-    <div class="form-group row">
-      <label for="lob" class="col-sm-2 col-form-label">Line of Business</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control" id="lob" placeholder="Line of Business" disabled>
-      </div>
-    </div>
-    <div class="form-group row">
-      <label for="org_type" class="col-sm-2 col-form-label">Organisation Type</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control" id="org_type" placeholder="Organisation Type" disabled>
-      </div>
-    </div>
-    <div class="form-group row">
-      <label for="abn" class="col-sm-2 col-form-label">Australian Business Number</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control" id="abn" placeholder="ABN" disabled>
-      </div>
-    </div>
-    <div class="form-group row">
-      <label for="branch" class="col-sm-2 col-form-label">Branch (if applicable)</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control" id="branch" placeholder="" disabled>
-      </div>
-    </div>
-    <div class="form-group row">
-      <label for="org_desc" class="col-sm-2 col-form-label">Organisation Description</label>
-      <div class="col-sm-10">
-        <textarea class="form-control" id="org_desc" disabled></textarea>
-      </div>
-    </div>
-  </form>
-</div>
-
-
-
-
-
-
-
-
-
-
+        <div class="row">
+            <div class="col-md-6">
+                        <iframe id="myframe" src="/app" style="min-width: 500px; max-height: 150px;"></iframe>
+            </div>
+            <div class="col-md-6">
+                <div class="info-div">
+                <pre style="font-size:0.5em" >
+                    <code class="tap" id="log"></code>
+                </pre>
+                </div>                
+            </div>
+        <!--<p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>-->
 <div class="row">
     <div class="col-md-12">
   
@@ -284,10 +205,6 @@ notok 9 - ERROR
 
       </div>
 
-
-        
-    </div>
-</div>
 </div>
 
 
@@ -318,7 +235,7 @@ var ws;
            console.log("WebSocket is supported by your Browser!");
            
            // Let us open a web socket
-           ws = new WebSocket("ws://localhost:3000/app/data");
+           ws = new WebSocket("<%= $WEBSOCKET_URL %>"); //"ws://localhost:3000/app/data""
             
            ws.onopen = function()
            {
@@ -363,8 +280,8 @@ var ws;
 
   /* --------------- JQUERY MAIN ---- */
   $(function() {
-   // CreateWebSocket();
-    
+    CreateWebSocket();
+    redraw_screen();
   });
 </script>
 

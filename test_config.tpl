@@ -22,4 +22,6 @@
 
 
 [MOJO_APP_PARAMS]
-WEBSOCKET_URL  = ws://localhost:3000/data
+WEBSOCKET_URL  = ws://localhost:3000/app/data
+APPLICATION_URL_BASE = http://localhost:3000
+APPLICATION_DIRECTORY = app
