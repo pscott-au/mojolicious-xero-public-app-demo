@@ -41,6 +41,8 @@ A quick way to create an rc.d script to run the mojo app as a system service is 
 
 ## TO DO
 
+NB: AS AT 3rd May - I have seen this application failing with not moving beyond '## REQUESTING ACCESS TOKEN' state - issue under investigation.
+
 Currently once you have a valid session the Company details are retrieved and used to construct the welcome screen with the name of the user's company and a few buttons to access Xero API endpoints. **These buttons don't do anything at the moment.** 
 I am in the process of adding this functionality to retreive and provide nicely formatted data.
 

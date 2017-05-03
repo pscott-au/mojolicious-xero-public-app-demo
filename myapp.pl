@@ -265,7 +265,7 @@ AUTH TOKEN OBTAINED = <%= $got_access_token %> <hr/>
   window.opener.document.body.style.backgroundColor = "red";
   window.opener.complete_callback("<%= $user_org_name %>");
   setTimeout(function(){
-    //window.close();
+    // window.close();
    }, 2000);
   
 </script>
