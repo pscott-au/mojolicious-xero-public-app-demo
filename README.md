@@ -7,6 +7,8 @@
 An example application demonstrating the use of the Perl WebService::Xero module to implement a Xero 'Public API Application'.
 This example of a [Xero Public API Application](https://developer.xero.com/documentation/getting-started/public-applications/) provides a browser based application that Xero users can allow access to their accounts records. When the user authorises Xero access to the application, the application will show buttons that demonstrate access to Company Details, Contacts and Invoices.
 
+You can see a [working instance of this live here.](https://xero.computerpros.net.au/app/main)
+
 This example is aimed at those providing solutions to Accounting Service Providers but is suitable as a starter for any application that requires integration with multiple external Xero accounts. 
 
 ### Requirements
@@ -44,6 +46,7 @@ A quick way to create an rc.d script to run the mojo app as a system service is 
 
 I am currently expanding this in sync with the latest development version 1.2 of [WebService::Xero](https://github.com/pscott-au/CCP-Xero). The development version is being
 refactored to include classes that describe Xero components and encapsulate the data in more detail than a simple struct or json object.
+In order to run in a production environment with hypnotoad, an approach to interprocess communication is required because the current approach of using a global variable to contain all the socket connections will not be shared across multi-processes. See [Issue#1](https://github.com/pscott-au/mojolicious-xero-public-app-demo/issues/1) for more details.
 
 ## TO DO
 

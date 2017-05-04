@@ -1,9 +1,12 @@
 #!/usr/bin/env perl
 use Mojolicious::Lite;
+use  Mojo::Log;
 
 use WebService::Xero::Agent::PublicApplication;
 use Data::Dumper;
 use JSON;
+use warnings;
+
 =pod
 
 =head1 TITLE myapp.pl 
@@ -20,7 +23,7 @@ use JSON;
 
     morbo ./myapp.pl
 
-    Open browser to http://localhost:3000/auth
+    Open browser to http://localhost:3000/app/auth
       should then be redirected to Xero to confirm access and redirected to http://localhost:3000/
       where if validated the app will pull the Users Xero Organisation details and
       display them.
@@ -35,8 +38,12 @@ use JSON;
 ## for a similar approach to the CCP::Xero test module to load the credentials
 use File::Slurp;  ## used to load the keyfile
 use Config::Tiny; ## global install specific configuration parameters
+
 my $config =  Config::Tiny->read( 'test_config.ini' );
 my $pk_text = read_file( $config->{PRIVATE_APPLICATION}{KEYFILE} ) if ( defined $config->{PRIVATE_APPLICATION}{KEYFILE} and -e "$config->{PRIVATE_APPLICATION}{KEYFILE}");
+
+
+
 
 ## alt - manually hard code examples - NB you would NOT expose these as ENV in production
 #my $config = {
@@ -52,6 +59,8 @@ my $xero_sessions = {};
 my $xero_session_id = 0;
 
 my $app = app;
+my $log = Mojo::Log->new( path => './log/debug.log', level => 'debug' );
+$app->log($log);
 
 $app->sessions->cookie_name('xero_testing');
 
@@ -223,6 +232,7 @@ Sends $status as json to socket clients ( the user application window )
 sub update_xero_session
 {
     my ( $self, $status ) = @_;
+    $log->debug('update_xero_session:' . Dumper $status);
     $xero_sessions->{ $self->session->{'xero_session_id'} }{ status } = $status;
     if ( $xero_sessions->{ $self->session->{'xero_session_id'} }{ socket_client } )
     {
