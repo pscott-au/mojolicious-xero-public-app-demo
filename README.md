@@ -25,8 +25,8 @@ This example is aimed at those providing solutions to Accounting Service Provide
     ## edit test_config.ini to include the Xero Public App API credentials
     
 ### Running
-
-    morbo ./myapp.pl
+  
+     morbo ./myapp.pl
 
 NB: Multi-process options such as hypnotoad not currently supported.
 
