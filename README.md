@@ -56,7 +56,7 @@ In order to run in a production environment with hypnotoad, an approach to inter
 * Currently once you have a valid session the Company details are retrieved and used to construct the welcome screen with the name of the user's company and a few buttons to access Xero API endpoints. **These buttons don't do anything at the moment.** 
 * I am in the process of adding this functionality to retreive and provide nicely formatted data.
 * Need to find a way to properly communicate how all of the components of this system interact - am considering use of https://p5js.org/ to create an animated model.
-
+* I would also like to add in a local caching facility to minimise API calls and include default paging etc to pull all results where appropriate - will probably include in the WebService::Xero module.
 
 ## NOTES
 
