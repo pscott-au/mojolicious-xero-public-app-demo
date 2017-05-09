@@ -35,6 +35,15 @@ Open browser to [http://localhost:3000/app/main](http://localhost:3000/app/main)
   OR
 Open browser to http://localhost:3000/app/ to just see the app running without diagnostics etc.
 
+
+
+WARNING!!!!! 
+WARNING!!!!! 
+        If you configure you ini file and API KEY  with localhost as the domain you cannot use 127.0.0.1 and must use localhost !!!!!
+        I have more than once wasted an hour or so trying to debug this !!  
+WARNING!!!!! 
+WARNING!!!!! 
+
 When you click on the 'Authorise Xero' button you should then be redirected to Xero to confirm access and redirected to an authenticated application interface.
 
 

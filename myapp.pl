@@ -3,8 +3,9 @@ use Mojolicious::Lite;
 use  Mojo::Log;
 
 use WebService::Xero::Agent::PublicApplication;
+use WebService::Xero::Contact;
 use Data::Dumper;
-use JSON;
+use JSON::XS;
 use warnings;
 
 =pod
@@ -72,6 +73,7 @@ push @{$static->paths}, ($ENV{PWD});
 get "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/" => sub {
   my $self = shift;
   $self->session->{'xero_session_id'} = $xero_session_id++;
+  $log->debug('SETTING SESSION ID = ' .  $self->session->{'xero_session_id'} );
   $xero_sessions->{ $self->session->{'xero_session_id'} } = { 'id' => $self->session->{'xero_session_id'}, status => 'NEW' };
   
   $self->render(template => 'xero_login',
@@ -105,8 +107,41 @@ get "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/auth" => sub {
       update_xero_session( $self, 'REDIRECTING TO Xero to Authorise');
       $xero_sessions->{ $self->session->{'xero_session_id'}  }{'xero_usl'} = $url;
       shift->redirect_to( $url );    
-    }    
+    } 
+    else 
+    {
+      $log->debug("failed to generate callback url");
+      shift->redirect_to( '/app/error');
+      return undef;
+    }  
 };
+
+
+get "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/contacts" => sub {
+    my ( $self ) = @_;
+
+    my $contact_list = WebService::Xero::Contact->get_all_using_agent( agent=> $xero_sessions->{ $self->session->{'xero_session_id'} }{xero} );
+    
+    
+    my $contacts_json = contacts_list_as_json( $contact_list );
+    $self->render(template => 'contacts',
+                  contacts_json => $contacts_json,
+                  base_url         => $config->{MOJO_APP_PARAMS}{APPLICATION_URL_BASE}
+                  );
+  };
+
+sub contacts_list_as_json
+{
+  my ( $contact_list ) = @_;
+  ## CURRENTLY TO DUMP LIST AS JSON NEED TO DO A LITTLE DANCE
+  ##  thinking about creating a container class to wrap this and an iterator ..
+  my $json = new JSON::XS;
+  $json = $json->convert_blessed ([1]);
+  return  $json->encode( $contact_list ) ; #();
+  #print to_json(@$contact_list );
+}
+
+
 
 get "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/cb" => sub {
     my ( $self ) = @_;
@@ -139,6 +174,8 @@ get "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/cb" => sub {
         $org_name = $org->{LegalName};
         update_xero_session( $self, 'GOT ORGANISATION DATA');
         $dumper = Dumper $org;
+        $xero_sessions->{ $self->session->{'xero_session_id'} }{xero} = $xero;
+        #$self->session->{xero} = $xero; ## store the agent for future use
 
     }    
     $self->render(template => 'cb',  # one=> $self->every_param('foo')->[0], two => $self->every_param('foo')->[0], 
@@ -197,6 +234,7 @@ sub generate_xero_auth_link_with_callback
 ### SOCKET STUFF
 websocket "/$config->{MOJO_APP_PARAMS}{APPLICATION_DIRECTORY}/data" => sub {
   my $self = shift;
+  $log->debug( 'Sessionid = ' . $self->session->{'xero_session_id'} );
   $xero_sessions->{ $self->session->{'xero_session_id'} }{ socket_client } = $self;
 
   my $loop = Mojo::IOLoop->singleton;
@@ -232,6 +270,7 @@ Sends $status as json to socket clients ( the user application window )
 sub update_xero_session
 {
     my ( $self, $status ) = @_;
+    #return unless $self->session->{'xero_session_id'};
     $log->debug('update_xero_session:' . Dumper $status);
     $xero_sessions->{ $self->session->{'xero_session_id'} }{ status } = $status;
     if ( $xero_sessions->{ $self->session->{'xero_session_id'} }{ socket_client } )
@@ -241,7 +280,7 @@ sub update_xero_session
     }
     else
     {
-        warn('no session socket to update ');
+        $log->debug('no session socket to update ');
     }
 
 }
@@ -303,19 +342,32 @@ AUTH TOKEN OBTAINED = <%= $got_access_token %> <hr/>
 -->
 </body>
 <script>
-  window.opener.document.body.style.backgroundColor = "red";
-  window.opener.complete_callback("<%= $user_org_name %>");
+  // the following attempts to interact with the parent cause origin issues but works behind https proxy??? not sure whats going on here.
+   window.opener.document.body.style.backgroundColor = "red";
+   window.opener.complete_callback("<%= $user_org_name %>");
   setTimeout(function(){
      window.close(); // comment this line out to prevent the auth popup from closing if need to diagnose
-   }, 1500);
+   }, 500);
   
 </script>
 </html>
 
+@@ contacts.html.ep
+<html>
+<headh></head>
+<body>
+
+<pre>Contacts as JSON <%= $contacts_json %></pre>
+</body>
+</html>
 
 
 @@ xero_login.html.ep
-<html><head><title>Demo Integrated Application</title></head>
+<html>
+<head>
+<meta http-equiv="Pragma" content="no-cache">
+<title>Demo Integrated Application</title>
+</head>
 <body>
 <div class="container" id="connect">
 Sample Application Embedded in an iFrame Window
@@ -329,7 +381,7 @@ Sample Application Embedded in an iFrame Window
   <div class="row">
   <div class="col-md-5">
         <div class="btn-group">
-          <button type="button" class="btn ">Contacts</button>
+          <button type="button" id='contacts_btn' class="btn ">Contacts</button>
           <button type="button" class="btn btn-warning">Organisation</button>
           <button type="button" class="btn btn-success">Invoices</button>
         </div>
@@ -349,6 +401,9 @@ Sample Application Embedded in an iFrame Window
     document.body.style.backgroundColor = "blue";
     $('#connect').hide();
     $('#connected').show();
+    $('#contacts_btn').on('click', function (e) {  
+        window.open('<%= $base_url %>/<%= $app_dir %>/contacts','pagename','resizable,height=560,width=670'); return false;
+      });
   }
 
   $(function() {
