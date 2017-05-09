@@ -49,6 +49,10 @@ A quick way to create an rc.d script to run the mojo app as a system service is 
 
 I am currently expanding this in sync with the latest development version 1.2 of [WebService::Xero](https://github.com/pscott-au/CCP-Xero). The development version is being
 refactored to include classes that describe Xero components and encapsulate the data in more detail than a simple struct or json object.
+
+WARNING: If you don't use the above development version but use the production CPAN version then some of the functionality in this app will not work. I am anticipating an update to the release version before the end of May 2017.
+
+
 In order to run in a production environment with hypnotoad, an approach to interprocess communication is required because the current approach of using a global variable to contain all the socket connections will not be shared across multi-processes. See [Issue#1](https://github.com/pscott-au/mojolicious-xero-public-app-demo/issues/1) for more details.
 
 ## TO DO
