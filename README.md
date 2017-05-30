@@ -4,6 +4,7 @@
 
 
 
+
 An example application demonstrating the use of the Perl WebService::Xero module to implement a Xero 'Public API Application'.
 This example of a [Xero Public API Application](https://developer.xero.com/documentation/getting-started/public-applications/) provides a browser based application that Xero users can allow access to their accounts records. When the user authorises Xero access to the application, the application will show buttons that demonstrate access to Company Details, Contacts and Invoices.
 
