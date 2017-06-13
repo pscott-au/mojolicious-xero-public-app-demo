@@ -21,3 +21,4 @@ nytprof.out
 test_config.ini
 privatekey.pem
 log/
+test/
